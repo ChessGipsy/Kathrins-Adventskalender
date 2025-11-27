@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adventskalender für dich 🎄</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Optionale Google-Font, kannst du auch löschen -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #f4f5fb;
+      --card-bg: #ffffff;
+      --accent: #c0392b;
+      --accent-soft: #f8d7da;
+      --text: #2c3e50;
+      --door-closed: #e74c3c;
+      --door-open: #ecf0f1;
+      --door-locked: #7f8c8d;
+      --shadow-soft: 0 18px 40px rgba(0,0,0,0.12);
+      --radius-xl: 1.5rem;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Quicksand", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #ffe8e8, #f4f5fb 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .wrapper {
+      max-width: 960px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-soft);
+      padding: 2rem 1.5rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+      .wrapper {
+        padding: 2.5rem 3rem 3rem;
+      }
+    }
+
+    .wrapper::before {
+      content: "✨";
+      position: absolute;
+      font-size: 3rem;
+      opacity: 0.15;
+      top: 1rem;
+      right: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin: 0;
+    }
+
+    header p {
+      margin: 0.5rem 0 0;
+      color: #7f8c8d;
+      font-size: 0.95rem;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    @media (min-width: 768px) {
+      .calendar {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+
+    .door {
+      position: relative;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, var(--door-closed), #ff7675);
+      color: #fff;
+      cursor: pointer;
+      padding: 0.7rem;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, opacity 0.2s ease;
+      overflow: hidden;
+    }
+
+    .door:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 26px rgba(0,0,0,0.20);
+    }
+
+    .door-number {
+      font-size: 1.4rem;
+      font-weight: 700;
+      z-index: 1;
+    }
+
+    .door.open {
+      background: linear-gradient(135deg, var(--door-open), #ffffff);
+      color: var(--accent);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    .door.locked {
+      background: linear-gradient(135deg, var(--door-locked), #95a5a6);
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+
+    .door.locked .lock-icon {
+      position: absolute;
+      right: 0.5rem;
+      top: 0.5rem;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .door-tag {
+      position: absolute;
+      left: 0.6rem;
+      bottom: 0.45rem;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+
+    /* Hinweis-Leiste */
+    .info-bar {
+      margin-top: 1.4rem;
+      font-size: 0.8rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.7rem 0.9rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-bar span {
+      font-size: 1rem;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 1rem;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: #ffffff;
+      border-radius: 1.5rem;
+      max-width: 480px;
+      width: 100%;
+      padding: 1.7rem 1.6rem 1.8rem;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+      position: relative;
+      animation: popIn 0.22s ease-out;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      position: absolute;
+      top: 0.9rem;
+      right: 1rem;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #7f8c8d;
+    }
+
+    .modal-title {
+      margin: 0 0 0.4rem;
+      font-size: 1.15rem;
+    }
+
+    .modal-subtitle {
+      margin: 0 0 0.8rem;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #bdc3c7;
+    }
+
+    .modal-text {
+      margin: 0.5rem 0 0;
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
+
+    footer {
+      margin-top: 1.6rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #95a5a6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <!-- 💡 Hier kannst du den Titel anpassen -->
+      <h1>Kathrins Mini-Adventskalender 💖</h1>
+      <p>Jeden Tag ein kleines Türchen, nur für dich.</p>
+    </header>
+
+    <main class="calendar" id="calendar">
+      <!-- 24 Türchen – Text (Nummer) kann geändert werden, DAY steht im data-day -->
+      <!-- Du kannst die Reihenfolge auch mischen, wenn du magst -->
+      <!-- Reihe 1 -->
+      <div class="door" data-day="1"><span class="door-number">1</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="2"><span class="door-number">2</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="3"><span class="door-number">3</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="4"><span class="door-number">4</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <!-- Reihe 2 -->
+      <div class="door" data-day="5"><span class="door-number">5</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="6"><span class="door-number">6</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="7"><span class="door-number">7</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="8"><span class="door-number">8</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <!-- Reihe 3 -->
+      <div class="door" data-day="9"><span class="door-number">9</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="10"><span class="door-number">10</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="11"><span class="door-number">11</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="12"><span class="door-number">12</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <!-- Reihe 4 -->
+      <div class="door" data-day="13"><span class="door-number">13</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="14"><span class="door-number">14</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="15"><span class="door-number">15</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="16"><span class="door-number">16</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <!-- Reihe 5 -->
+      <div class="door" data-day="17"><span class="door-number">17</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="18"><span class="door-number">18</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="19"><span class="door-number">19</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="20"><span class="door-number">20</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <!-- Reihe 6 -->
+      <div class="door" data-day="21"><span class="door-number">21</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="22"><span class="door-number">22</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="23"><span class="door-number">23</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+      <div class="door" data-day="24"><span class="door-number">24</span><span class="door-tag">für dich</span><span class="lock-icon">🔒</span></div>
+    </main>
+
+    <div class="info-bar">
+      <span>🎁</span>
+      <span> Das größte Geschenk bist du! </span>
+    </div>
+
+    <footer>
+      Von deinem Lieblins-Ehemann ❤️ Nur für dich.
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <button class="modal-close" id="modalClose" aria-label="Schließen">&times;</button>
+      <p class="modal-subtitle" id="modalSubtitle"></p>
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <p class="modal-text" id="modalText"></p>
+    </div>
+  </div>
+<script>
+  // ============================
+  // KONFIGURATION
+  // ============================
+
+  // Advent-Jahr (kann so bleiben – nimmt immer das aktuelle Jahr)
+  const ADVENT_YEAR = new Date().getFullYear();
+  const ENABLE_DATE_LOCK = true;  // Sperre aktiv
+
+  // Hier trägst du deine Sprüche ein:
+  const messages = {
+    1:  "Ich freue mich auf eine gemütliche Weihnachtszeit mit Felix und dir <3 💌",
+    2:  "Heute gibt es eine ausgiebige Schulter- Nackenmassage",
+    3:  "Ich liebe dich so sehr!!!",
+    4:  "Du machst so einen super Job als Felix' Mama!",
+    5:  "Meine Super-Freundesgruppen-Urlaub-Organisatorin *.*",
+    6:  "Wenn du möchtest, bringe ich heute etwas von Krall mit. Bitte Bescheid sagen :*",
+    7:  "Ohne dich wüsste ich garnicht wie man die Weihnachtszeit richtig genießt!",
+    8:  "Du hast dir heute eine Ganzkörpermassage verdient.",
+    9:  "I love you…",
+    10: "…forever",
+    11: "Du siehst sooo gut aus!",
+    12: "Heute entscheide du, was wir essen – ich koche / hole / organisiere alles 🥰",
+    13: "Danke, dass du immer an uns glaubst, selbst wenn es stressig wird.",
+    14: "Ich bewundere dich jeden Tag.",
+    15: "All I want for Christmas is you!",
+    16: "Heute gibt’s: 1 heiße Schokolade + 1 warme Umarmung + 1 gemütlicher Abend – alles inklusive.",
+    17: "Ich hoffe du hast heute einen super Mädelsabend. Ich passe auf Felix auf",
+    18: "I want to kiss you",
+    19: "Nur noch 5 Tage bis zum Weihnachtsessen. Das wird lecker!",
+    20: "Heute bestimme ich nichts – du bekommst 100% Entscheidungsrecht über unseren Abend",
+    21: "Denk immer daran \"ob er schläft oder nicht, er ist unser Baby\"",
+    22: "Ich freue mich auf jede Zukunft mit dir – ob mit viel Schlaf oder wenig Schlaf",
+    23: "Welche Serie/Film möchtest du heute gucken? Ich bin bei allem dabei. Sogar bei einem Weihnachtsfilm",
+    24: "Frohe Weihnachten my love 🎄"
+  };
+
+  // Optionaler, süßer Titel je nach Tag
+  function getTitleForDay(day) {
+    if (day === 24) return "Frohe Weihnachten, du Wunderbare 🎄";
+    if (day === 1) return "Das erste Türchen ✨";
+    return "Türchen " + day;
+  }
+
+  // ============================
+  // LOGIK
+  // ============================
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();   // 0 = Jan, 11 = Dez
+  const currentDay = today.getDate();
+
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalClose = document.getElementById("modalClose");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalSubtitle = document.getElementById("modalSubtitle");
+  const modalText = document.getElementById("modalText");
+
+  function openModal(day) {
+    modalTitle.textContent = getTitleForDay(day);
+    modalSubtitle.textContent = `${day}. Dezember`;
+    modalText.textContent = messages[day] || "Hier kommt dein Text für Tag " + day + " hin. 💖";
+    modalBackdrop.classList.add("visible");
+  }
+
+  function closeModal() {
+    modalBackdrop.classList.remove("visible");
+  }
+
+  modalBackdrop.addEventListener("click", (e) => {
+    if (e.target === modalBackdrop) {
+      closeModal();
+    }
+  });
+
+  modalClose.addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  // Türen initialisieren
+  const doors = document.querySelectorAll(".door");
+  doors.forEach(door => {
+    const day = parseInt(door.getAttribute("data-day"), 10);
+
+    let shouldLock = false;
+
+    if (ENABLE_DATE_LOCK) {
+      if (year < ADVENT_YEAR) {
+        // Jahre vor dem Advent-Jahr: alles sperren
+        shouldLock = true;
+      } else if (year > ADVENT_YEAR) {
+        // Jahre nach dem Advent-Jahr: alles frei
+        shouldLock = false;
+      } else {
+        // richtiges Jahr:
+        if (month < 11) {
+          // vor Dezember: alles sperren
+          shouldLock = true;
+        } else if (month === 11) {
+          // im Dezember: nur zukünftige Tage sperren
+          shouldLock = currentDay < day;
+        } else {
+          // nach Dezember: alles frei
+          shouldLock = false;
+        }
+      }
+    }
+
+    if (shouldLock) {
+      door.classList.add("locked");
+    } else {
+      door.classList.remove("locked");
+    }
+
+    door.addEventListener("click", () => {
+      if (door.classList.contains("locked")) {
+        alert(`Dieses Türchen darf erst am ${day}. Dezember geöffnet werden 🎁`);
+        return;
+      }
+
+      door.classList.add("open");
+      openModal(day);
+    });
+  });
+</script>
